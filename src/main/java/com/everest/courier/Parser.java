@@ -11,15 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
-    public static CostContext parseCostContext(List<String> lines) throws MyException {
-        CostContext context = new CostContext();
+    private void buildContext(Context context, List<String> lines) throws MyException {
         String msg = "";
         try {
             if(lines.size() == 0)
                 throw new UserInputEmpty();
             String line = lines.get(0).trim();
             if (line.length() == 0)
-                throw new UserInputFieldMissingPackageId();
+                throw new UserInputFieldMissingBaseDeliveryCost();
             String[] parts = line.split(" ");
             msg = "Invalid field - base_delivery_cost";
             context.baseDeliveryCost = new BigDecimal(parts[0]);
@@ -28,11 +27,11 @@ public class Parser {
             msg = "Invalid field - no_of_packages";
             context.noOfPackages = Integer.parseInt(parts[1]);
             if(lines.size() == 1)
-                throw new UserInputFieldMissingPackageInfo();
-            for(int i = 1; i < lines.size(); i++) {
+                throw new UserInputFieldMissingPackageId();
+            for(int i = 1; i <= context.noOfPackages; i++) {
                 line = lines.get(i).trim();
                 if(line.length() == 0)
-                    throw new UserInputFieldMissingPackageInfo();
+                    throw new UserInputFieldMissingPackageId();
                 parts = line.split(" ");
                 ShipmentItem item = new ShipmentItem();
                 item.packageId = parts[0];
@@ -48,6 +47,48 @@ public class Parser {
                     item.offerCode = parts[3];
                 context.shipmentItems.add(item);
             }
+            if(context.noOfPackages < (lines.size() - 1)) {
+                line = lines.get(context.noOfPackages);
+                parts = line.split(" ");
+            }
+        } catch (Throwable e) {
+            if(e instanceof MyException)
+                throw e;
+            else
+                throw new UnknownException(msg, e);
+        }
+    }
+
+    public Context parseCostContext(List<String> lines) throws MyException {
+        CostContext context = new CostContext();
+        buildContext(context, lines);
+        return context;
+    }
+
+    public TimeContext parseTimeContext(List<String> lines) throws MyException {
+        TimeContext context = new TimeContext();
+        buildContext(context, lines);
+        String msg = "";
+        try {
+            if(context.noOfPackages == (lines.size() - 1))
+                throw new UserInputFieldMissingNoOfVehicle();
+            String line = lines.get(context.noOfPackages + 1).trim();
+            if(line.length() == 0)
+                throw new UserInputFieldMissingNoOfVehicle();
+            String[] parts = line.split(" ");
+            msg = "Invalid field - no_of_vehicle";
+            context.noOfVehicle = Integer.parseInt(parts[0]);
+            if(parts.length == 1)
+                throw new UserInputFieldMissingVehicleSpeed();
+            msg = "Invalid field - vehicle_speed";
+            context.vehicleSpeed = Integer.parseInt(parts[1]);
+            if(parts.length == 2)
+                throw new UserInputFieldMissingVehicleCapacity();
+            msg = "Invalid field - vehicle_capacity";
+            context.vehicleCapacity = Integer.parseInt(parts[2]);
+            for(int i = 0; i < context.noOfVehicle; i++) {
+                context.vehicles.add(new ShippingVehicle(String.format("%02d", i + 1), context.vehicleSpeed, BigDecimal.valueOf(0), context.vehicleCapacity));
+            }
         } catch (Throwable e) {
             if(e instanceof MyException)
                 throw e;
@@ -57,7 +98,7 @@ public class Parser {
         return context;
     }
 
-    public static void buildConfiguration(CostContext context, String value) throws ParseException {
+    public void buildConfiguration(Context context, String value) throws ParseException {
         JSONObject config = (JSONObject) new JSONParser().parse(value);
         context.weightFactor = Integer.parseInt(config.get("weightFactor").toString());
         context.distanceFactor = Integer.parseInt(config.get("distanceFactor").toString());

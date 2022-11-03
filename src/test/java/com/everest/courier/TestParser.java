@@ -12,16 +12,16 @@ import static org.junit.Assert.*;
 public class TestParser {
     private void testParseCostContext_invalidInput(List<String> lines, String msg) {
         MyException e = assertThrows(MyException.class, ()->{
-            Parser.parseCostContext(lines);
+            new Parser().parseCostContext(lines);
         });
         assertEquals(msg, e.getMessage());
     }
 
     @Test
-    public void testParseCostContext_emptyLine() {
+    public void testParseCostContext_missingBaseDeliveryCost() {
         List<String> lines = new ArrayList<>();
         lines.add("");
-        testParseCostContext_invalidInput(lines, "Missing field - package_id");
+        testParseCostContext_invalidInput(lines, "Missing field - base_delivery_cost");
     }
 
     @Test
@@ -32,21 +32,21 @@ public class TestParser {
     }
 
     @Test
-    public void testParseCostContext_missingField_noOfPackages() {
+    public void testParseCostContext_missingNoOfPackages() {
         List<String> lines = new ArrayList<>();
         lines.add("100.00");
         testParseCostContext_invalidInput(lines, "Missing field - no_of_packages");
     }
 
     @Test
-    public void testParseCostContext_missingPackageInfo() {
+    public void testParseCostContext_missingPackageId() {
         List<String> lines = new ArrayList<>();
         lines.add("100.00 1");
-        testParseCostContext_invalidInput(lines, "Missing field - package_info");
+        testParseCostContext_invalidInput(lines, "Missing field - package_id");
     }
 
     @Test
-    public void testParseCostContext_missingPackageWeigth() {
+    public void testParseCostContext_missingPackageWeight() {
         List<String> lines = new ArrayList<>();
         lines.add("100.00 1");
         lines.add("PKG1");
@@ -54,7 +54,7 @@ public class TestParser {
     }
 
     @Test
-    public void testParseCostContext_invalidPackageWeigth() {
+    public void testParseCostContext_invalidPackageWeight() {
         List<String> lines = new ArrayList<>();
         lines.add("100.00 1");
         lines.add("PKG1 JUNK");
@@ -77,9 +77,9 @@ public class TestParser {
         testParseCostContext_invalidInput(lines, "Invalid field - distance");
     }
 
-    private CostContext testParseCostContext_withoutOfferCodeHelper(List<String> lines) {
+    private Context testParseCostContext_withoutOfferCodeHelper(List<String> lines) {
         try {
-            CostContext context = Parser.parseCostContext(lines);
+            Context context = new Parser().parseCostContext(lines);
             assertTrue((new BigDecimal(100)).compareTo(context.baseDeliveryCost) == 0);
             assertEquals(1, context.noOfPackages);
             assertEquals(1, context.shipmentItems.size());
@@ -108,8 +108,91 @@ public class TestParser {
         List<String> lines = new ArrayList<>();
         lines.add("100.00 1");
         lines.add("PKG1 50 30 OFR001");
-        CostContext context = testParseCostContext_withoutOfferCodeHelper(lines);
+        Context context = testParseCostContext_withoutOfferCodeHelper(lines);
         assertEquals("OFR001", context.shipmentItems.get(0).offerCode);
     }
 
+    private void testParseTimeContext_invalidInput(List<String> lines, String msg) {
+        MyException e = assertThrows(MyException.class, ()->{
+            new Parser().parseTimeContext(lines);
+        });
+        assertEquals(msg, e.getMessage());
+    }
+
+    @Test
+    public void testParseTimeContext_missingNoOfVehicle() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        testParseTimeContext_invalidInput(lines, "Missing field - no_of_vehicle");
+    }
+
+    @Test
+    public void testParseTimeContext_emptyLine() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("");
+        testParseTimeContext_invalidInput(lines, "Missing field - no_of_vehicle");
+    }
+
+    @Test
+    public void testParseTimeContext_invalidNoOfVehicle() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("JUNK");
+        testParseTimeContext_invalidInput(lines, "Invalid field - no_of_vehicle");
+    }
+
+    @Test
+    public void testParseTimeContext_missingVehicleSpeed() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("1");
+        testParseTimeContext_invalidInput(lines, "Missing field - vehicle_speed");
+    }
+
+    @Test
+    public void testParseTimeContext_invalidVehicleSpeed() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("1 JUNK");
+        testParseTimeContext_invalidInput(lines, "Invalid field - vehicle_speed");
+    }
+
+    @Test
+    public void testParseTimeContext_missingVehicleCapacity() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("1 70");
+        testParseTimeContext_invalidInput(lines, "Missing field - vehicle_capacity");
+    }
+
+    @Test
+    public void testParseTimeContext_invalidVehicleCapacity() {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("1 70 JUNK");
+        testParseTimeContext_invalidInput(lines, "Invalid field - vehicle_capacity");
+    }
+
+    @Test
+    public void testParseTimeContext() throws MyException {
+        List<String> lines = new ArrayList<>();
+        lines.add("100.00 1");
+        lines.add("PKG1 100 50");
+        lines.add("1 70 200");
+        TimeContext context = new Parser().parseTimeContext(lines);
+        assertEquals(1, context.vehicles.size());
+        ShippingVehicle item = context.vehicles.get(0);
+        assertEquals("01", item.vehicleNo);
+        assertEquals(70, item.speed);
+        assertEquals(200, item.capacity);
+        assertTrue(BigDecimal.valueOf(0).compareTo(item.availableAfter) == 0);
+    }
 }
