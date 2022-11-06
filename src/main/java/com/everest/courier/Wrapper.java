@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Time;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -52,7 +51,10 @@ public class Wrapper {
         System.out.println("\nInputs:");
         System.out.println(context.baseDeliveryCost + " " + context.noOfPackages);
         for(ShipmentItem item: context.shipmentItems) {
-            System.out.println(item.packageId + " " + item.weight + " " + item.distance + " " + item.offerCode);
+            String msg = item.packageId + " " + item.weight + " " + item.distance;
+            if(item.offerCode != null)
+                msg += " " + item.offerCode;
+            System.out.println(msg);
         }
         if(context instanceof TimeContext) {
             TimeContext timeContext = (TimeContext)context;
@@ -63,10 +65,13 @@ public class Wrapper {
     public void showResults(Context context) {
         if(context.resultItems.size() > 0)
             System.out.println("\nOutputs:");
+        DecimalFormat format = new DecimalFormat("0.##");
         for(ResultItem item: context.resultItems) {
-            String msg = item.packageId + " " + item.discount + " " + item.totalCost;
-            if(item instanceof TimeItem)
-                msg += " " + ((TimeItem)item).deliveryTime;
+            String msg = item.packageId + " " + format.format(item.discount) + " " + format.format(item.totalCost);
+            if(item instanceof TimeItem) {
+                TimeItem timeItem = (TimeItem)item;
+                msg += " " + (timeItem.arrivalTime != null? format.format(timeItem.arrivalTime): "None");
+            }
             System.out.println(msg);
         }
         if(context.resultItems.size() > 0)
@@ -75,10 +80,14 @@ public class Wrapper {
 
     public void saveOutput(String filename, Context context) throws IOException {
         FileWriter fw = new FileWriter(filename);
+        DecimalFormat format = new DecimalFormat("0.##");
         for (ResultItem item :context.resultItems) {
-            String msg = item.packageId + " " + item.discount + " " + item.totalCost + "\n";
-            if(item instanceof TimeItem)
-                msg += " " + ((TimeItem)item).deliveryTime;
+            String msg = item.packageId + " " + format.format(item.discount) + " " + format.format(item.totalCost);
+            if(item instanceof TimeItem) {
+                TimeItem timeItem = (TimeItem)item;
+                msg += " " + (timeItem.arrivalTime != null? format.format(timeItem.arrivalTime): "");
+            }
+            msg += "\n";
             fw.write(msg);
         }
         fw.close();

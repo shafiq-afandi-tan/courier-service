@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public class CostProcess implements Process {
+    private Factory factory;
+
+    public CostProcess(Factory factory) {
+        this.factory = factory;
+    }
     @Override
     public void run(Context argVal) {
         CostContext context = (CostContext)argVal;
@@ -18,8 +23,9 @@ public class CostProcess implements Process {
                     offerCodes.toArray(new OfferCode[size]));
             BigDecimal total = estimator.calculateDeliveryCost(shipItem);
             BigDecimal discount = estimator.calculateDiscount(shipItem, total);
-            CostItem costItem = new CostItem(shipItem.packageId, discount, total.subtract(discount));
-            context.resultItems.add(costItem);
+            ResultItem resultItem = factory.getResultItem(context.type, shipItem.packageId, discount, total.subtract(discount));
+            context.resultItems.add(resultItem);
+            context.resultMap.put(resultItem.packageId, resultItem);
         }
     }
 }

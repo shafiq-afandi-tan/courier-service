@@ -3,10 +3,10 @@ package com.everest.courier;
 import java.math.BigDecimal;
 
 public class TimeItem extends CostItem {
-    public BigDecimal deliveryTime;
+    public BigDecimal arrivalTime;
 
-    public TimeItem(String packageId, BigDecimal discount, BigDecimal totalCost, BigDecimal deliveryTime) {
+    public TimeItem(String packageId, BigDecimal discount, BigDecimal totalCost, BigDecimal arrivalTime) {
         super(packageId, discount, totalCost);
-        this.deliveryTime = deliveryTime;
+        this.arrivalTime = arrivalTime;
     }
 }

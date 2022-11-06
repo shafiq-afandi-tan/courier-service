@@ -1,0 +1,8 @@
+{
+  "weightFactor": 10,
+  "distanceFactor": 5,
+  "offerCodes": [
+    {"code": "OFR001", "weightLowerLimit": null, "weightUpperLimit":  200, "distanceLowerLimit":  null, "distanceUpperLimit":  50, "discount": 10},
+    {"code": "OFR002", "weightLowerLimit": 150, "weightUpperLimit":  200, "distanceLowerLimit":  50, "distanceUpperLimit":  80, "discount": 5},
+  ]
+}

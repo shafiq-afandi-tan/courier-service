@@ -79,7 +79,6 @@ public class MainProcess implements Process {
             wrapper.log(debug, "Get context");
             Process process = factory.getProcess(serviceType);
             context = factory.getContext(serviceType, lines);
-            context.type = serviceType;
             wrapper.log(debug, "Get configuration string");
             String strConfig = wrapper.getConfiguration();
             wrapper.log(debug, "Build configuration");
