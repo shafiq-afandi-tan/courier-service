@@ -11,89 +11,119 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
-    private void buildContext(Context context, List<String> lines) throws MyException {
-        String msg = "";
+    private void buildContext(Context context, List<String> lines) throws UserInputException {
+        if(lines.size() == 0)
+            throw new UserInputException("User Input Empty");
+
+        String line = lines.get(0).trim();
+
+        if (line.length() == 0)
+            throw new UserInputException("Missing field - base_delivery_cost");
+
+        String[] parts = line.split(" ");
+
         try {
-            if(lines.size() == 0)
-                throw new UserInputEmpty();
-            String line = lines.get(0).trim();
-            if (line.length() == 0)
-                throw new UserInputFieldMissingBaseDeliveryCost();
-            String[] parts = line.split(" ");
-            msg = "Invalid field - base_delivery_cost";
             context.baseDeliveryCost = new BigDecimal(parts[0]);
-            if(parts.length == 1)
-                throw new UserInputFieldMissingNoOfPackages();
-            msg = "Invalid field - no_of_packages";
+        }
+        catch(NumberFormatException e) {
+            throw new UserInputException("Invalid field - base_delivery_cost", e);
+        }
+
+        if(parts.length == 1)
+            throw new UserInputException("Missing field - no_of_packages");
+
+        try {
             context.noOfPackages = Integer.parseInt(parts[1]);
-            if(lines.size() == 1)
-                throw new UserInputFieldMissingPackageId();
-            for(int i = 1; i <= context.noOfPackages; i++) {
-                line = lines.get(i).trim();
-                if(line.length() == 0)
-                    throw new UserInputFieldMissingPackageId();
-                parts = line.split(" ");
-                ShipmentItem item = new ShipmentItem();
-                item.packageId = parts[0];
-                if(parts.length == 1)
-                    throw new UserInputFieldMissingPackageWeight();
-                msg = "Invalid field - package_weight";
+        }
+        catch(NumberFormatException e) {
+            throw new UserInputException("Invalid field - no_of_packages", e);
+        }
+
+        if(lines.size() == 1)
+            throw new UserInputException("Missing field - package_id");
+
+        for(int i = 1; i <= context.noOfPackages; i++) {
+            line = lines.get(i).trim();
+
+            if(line.length() == 0)
+                throw new UserInputException("Missing field - package_id");
+
+            parts = line.split(" ");
+            ShipmentItem item = new ShipmentItem();
+            item.packageId = parts[0];
+
+            if(parts.length == 1)
+                throw new UserInputException("Missing field - package_weight");
+
+            try {
                 item.weight = Integer.parseInt(parts[1]);
-                if(parts.length == 2)
-                    throw new UserInputFieldMissingDistance();
-                msg = "Invalid field - distance";
+            }
+            catch(NumberFormatException e) {
+                throw new UserInputException("Invalid field - package_weight");
+            }
+
+            if(parts.length == 2)
+                throw new UserInputException("Missing field - distance");
+
+            try {
                 item.distance = Integer.parseInt(parts[2]);
-                if(parts.length >= 4)
-                    item.offerCode = parts[3];
-                context.shipmentItems.add(item);
             }
-            if(context.noOfPackages < (lines.size() - 1)) {
-                line = lines.get(context.noOfPackages);
-                parts = line.split(" ");
+            catch(NumberFormatException e) {
+                throw new UserInputException("Invalid field - distance");
             }
-        } catch (Throwable e) {
-            if(e instanceof MyException)
-                throw e;
-            else
-                throw new UnknownException(msg, e);
+
+            if(parts.length >= 4)
+                item.offerCode = parts[3];
+
+            context.shipmentItems.add(item);
+        }
+        if(context.noOfPackages < (lines.size() - 1)) {
+            line = lines.get(context.noOfPackages);
+            parts = line.split(" ");
         }
     }
 
-    public Context parseCostContext(List<String> lines) throws MyException {
-        CostContext context = new CostContext();
+    public Context parseCostContext(List<String> lines) throws UserInputException {
+        Context context = new Context();
+        context.type = ServiceType.COST;
         buildContext(context, lines);
         return context;
     }
 
-    public TimeContext parseTimeContext(List<String> lines) throws MyException {
-        TimeContext context = new TimeContext();
+    public Context parseTimeContext(List<String> lines) throws UserInputException {
+        Context context = new Context();
+        context.type = ServiceType.TIME;
         buildContext(context, lines);
-        String msg = "";
+        if(context.noOfPackages == (lines.size() - 1))
+            throw new UserInputException("Missing field - no_of_vehicle");
+        String line = lines.get(context.noOfPackages + 1).trim();
+        if(line.length() == 0)
+            throw new UserInputException("Missing field - no_of_vehicle");
+        String[] parts = line.split(" ");
         try {
-            if(context.noOfPackages == (lines.size() - 1))
-                throw new UserInputFieldMissingNoOfVehicle();
-            String line = lines.get(context.noOfPackages + 1).trim();
-            if(line.length() == 0)
-                throw new UserInputFieldMissingNoOfVehicle();
-            String[] parts = line.split(" ");
-            msg = "Invalid field - no_of_vehicle";
             context.noOfVehicle = Integer.parseInt(parts[0]);
-            if(parts.length == 1)
-                throw new UserInputFieldMissingVehicleSpeed();
-            msg = "Invalid field - vehicle_speed";
+        }
+        catch (NumberFormatException e) {
+            throw new UserInputException("Invalid field - no_of_vehicle", e);
+        }
+        if(parts.length == 1)
+            throw new UserInputException("Missing field - vehicle_speed");
+        try {
             context.vehicleSpeed = Integer.parseInt(parts[1]);
-            if(parts.length == 2)
-                throw new UserInputFieldMissingVehicleCapacity();
-            msg = "Invalid field - vehicle_capacity";
+        }
+        catch(NumberFormatException e) {
+            throw new UserInputException("Invalid field - vehicle_speed", e);
+        }
+        if(parts.length == 2)
+            throw new UserInputException("Missing field - vehicle_capacity");
+        try {
             context.vehicleCapacity = Integer.parseInt(parts[2]);
-            for(int i = 0; i < context.noOfVehicle; i++) {
-                context.vehicles.add(new ShippingVehicle(String.format("%02d", i + 1), context.vehicleSpeed, BigDecimal.valueOf(0), context.vehicleCapacity));
-            }
-        } catch (Throwable e) {
-            if(e instanceof MyException)
-                throw e;
-            else
-                throw new UnknownException(msg, e);
+        }
+        catch(NumberFormatException e) {
+            throw new UserInputException("Invalid field - vehicle_capacity", e);
+        }
+        for(int i = 0; i < context.noOfVehicle; i++) {
+            context.vehicles.add(new ShippingVehicle(String.format("%02d", i + 1), context.vehicleSpeed, BigDecimal.valueOf(0), context.vehicleCapacity));
         }
         return context;
     }

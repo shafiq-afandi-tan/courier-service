@@ -1,8 +1,7 @@
 package com.everest.courier;
 
 
-import com.everest.courier.Exceptions.MyException;
-import com.everest.courier.Exceptions.UserInputEmpty;
+import com.everest.courier.Exceptions.EverestException;
 import com.everest.courier.Exceptions.UserInputException;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
@@ -81,12 +80,12 @@ public class TestMainProcess {
     }
 
     @Test
-    public void testMain_inputFileEmpty() throws FileNotFoundException, MyException {
+    public void testMain_inputFileEmpty() throws FileNotFoundException, EverestException {
         Wrapper mockedWrapper = mock(Wrapper.class);
         Factory mockedFactory = mock(Factory.class);
         when(mockedFactory.getWrapper()).thenReturn(mockedWrapper);
         when(mockedWrapper.getInputLines("input.txt")).thenReturn(new ArrayList<>());
-        when(mockedFactory.getContext(eq(ServiceType.COST), anyList())).thenThrow(new UserInputEmpty());
+        when(mockedFactory.getContext(eq(ServiceType.COST), anyList())).thenThrow(new UserInputException("User Input Empty"));
         new MainProcess(mockedFactory, new String[]{"cost", "-i", "input.txt", "-o", "output.txt"}).run(null);
         verify(mockedWrapper).getInputLines("input.txt");
         verify(mockedWrapper).showError("User Input Empty");
@@ -94,7 +93,7 @@ public class TestMainProcess {
     }
 
     @Test
-    public void testMain_invalidInputLines() throws FileNotFoundException, MyException {
+    public void testMain_invalidInputLines() throws FileNotFoundException, EverestException {
         List<String> lines = new ArrayList<>();
         lines.add("junk");
         String msg = "Invalid format - field base_delivery_cost";
@@ -113,11 +112,11 @@ public class TestMainProcess {
     }
 
     @Test
-    public void testMain() throws IOException, MyException, ParseException {
+    public void testMain() throws IOException, EverestException, ParseException {
         List<String> iLines = new ArrayList<>();
         iLines.add("100 1");
         iLines.add("PKG1 50 30");
-        CostItem costItem = new CostItem("PKG1", new BigDecimal(0), new BigDecimal(750));
+        ResultItem item = new ResultItem("PKG1", new BigDecimal(0), new BigDecimal(750));
         Factory mockedFactory = mock(Factory.class);
         Wrapper mockedWrapper = mock(Wrapper.class);
         when(mockedFactory.getWrapper()).thenReturn(mockedWrapper);
@@ -126,8 +125,9 @@ public class TestMainProcess {
         when(mockedWrapper.getInputLines("input.txt")).thenReturn(iLines);
         CostProcess mockedProcess = mock(CostProcess.class);
         when(mockedFactory.getProcess(ServiceType.COST)).thenReturn(mockedProcess);
-        Context context = new CostContext();
-        context.resultItems.add(costItem);
+        Context context = new Context();
+        context.type = ServiceType.COST;
+        context.resultItems.add(item);
         when(mockedFactory.getContext(ServiceType.COST, iLines)).thenReturn(context);
         String strOfferCodes = "";
         when(mockedWrapper.getConfiguration()).thenReturn(strOfferCodes);

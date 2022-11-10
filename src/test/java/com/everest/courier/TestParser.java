@@ -1,6 +1,6 @@
 package com.everest.courier;
 
-import com.everest.courier.Exceptions.MyException;
+import com.everest.courier.Exceptions.EverestException;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 
 public class TestParser {
     private void testParseCostContext_invalidInput(List<String> lines, String msg) {
-        MyException e = assertThrows(MyException.class, ()->{
+        EverestException e = assertThrows(EverestException.class, ()->{
             new Parser().parseCostContext(lines);
         });
         assertEquals(msg, e.getMessage());
@@ -80,6 +80,7 @@ public class TestParser {
     private Context testParseCostContext_withoutOfferCodeHelper(List<String> lines) {
         try {
             Context context = new Parser().parseCostContext(lines);
+            assertEquals(ServiceType.COST, context.type);
             assertTrue((new BigDecimal(100)).compareTo(context.baseDeliveryCost) == 0);
             assertEquals(1, context.noOfPackages);
             assertEquals(1, context.shipmentItems.size());
@@ -113,7 +114,7 @@ public class TestParser {
     }
 
     private void testParseTimeContext_invalidInput(List<String> lines, String msg) {
-        MyException e = assertThrows(MyException.class, ()->{
+        EverestException e = assertThrows(EverestException.class, ()->{
             new Parser().parseTimeContext(lines);
         });
         assertEquals(msg, e.getMessage());
@@ -182,12 +183,13 @@ public class TestParser {
     }
 
     @Test
-    public void testParseTimeContext() throws MyException {
+    public void testParseTimeContext() throws EverestException {
         List<String> lines = new ArrayList<>();
         lines.add("100.00 1");
         lines.add("PKG1 100 50");
         lines.add("1 70 200");
-        TimeContext context = new Parser().parseTimeContext(lines);
+        Context context = new Parser().parseTimeContext(lines);
+        assertEquals(ServiceType.TIME, context.type);
         assertEquals(1, context.vehicles.size());
         ShippingVehicle item = context.vehicles.get(0);
         assertEquals("01", item.vehicleNo);

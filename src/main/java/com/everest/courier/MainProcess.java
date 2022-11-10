@@ -22,9 +22,9 @@ public class MainProcess implements Process {
     public void run(Context context) {
         try {
             if(args == null)
-                throw new CmdLineArgumentNull();
+                throw new CmdLineArgument("Null Argument");
             else if(args.length == 0)
-                throw new CmdLineArgumentEmpty();
+                throw new CmdLineArgument("Empty Argument");
 
             ServiceType serviceType;
 
@@ -32,7 +32,7 @@ public class MainProcess implements Process {
                 serviceType = ServiceType.valueOf(args[0].toUpperCase());
             }
             catch (Exception e) {
-                throw new CmdLineArgumentInvalid();
+                throw new CmdLineArgument("Invalid Argument");
             }
 
             int end = args.length;
@@ -53,7 +53,7 @@ public class MainProcess implements Process {
                             debug = true;
                             break;
                         default:
-                            throw new CmdLineArgumentInvalid();
+                            throw new CmdLineArgument("Invalid Argument");
                     }
                 }
                 else if(lastArg != null){
@@ -70,9 +70,9 @@ public class MainProcess implements Process {
             }
 
             if(iFileName == null || oFileName == null)
-                throw new CmdLineArgumentMissing();
+                throw new CmdLineArgument("Missing Argument");
             else if(iFileName.length() == 0 || oFileName.length() == 0)
-                throw new CmdLineArgumentValueMissing();
+                throw new CmdLineArgument("Missing Argument Value");
 
             wrapper.log(debug, "Get input lines");
             List<String> lines = wrapper.getInputLines(iFileName);
@@ -94,12 +94,13 @@ public class MainProcess implements Process {
             wrapper.exit(0);
         }
         catch (Exception e) {
-            if(e instanceof CmdLineArgumentNull || e instanceof CmdLineArgumentEmpty) {
+            String msg = e.getMessage();
+            if(msg != null && (msg.equals("Empty Argument") || msg.equals("Null Argument"))) {
                 wrapper.showVersion();
                 wrapper.showCopyRight();
                 wrapper.showHelp();
             }
-            else if(e instanceof MyException) {
+            else if(e instanceof EverestException) {
                 wrapper.showError(e.getMessage());
                 wrapper.showHelp();
             }

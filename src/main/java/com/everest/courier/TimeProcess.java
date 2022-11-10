@@ -1,8 +1,10 @@
 package com.everest.courier;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TimeProcess extends CostProcess {
     Factory factory;
@@ -13,9 +15,8 @@ public class TimeProcess extends CostProcess {
         this.utilities = factory.getUtilities();
     }
     @Override
-    public void run(Context argValue) {
-        super.run(argValue);
-        TimeContext context = (TimeContext)argValue;
+    public void run(Context context) {
+        super.run(context);
         List<ShipmentItem> itemPool = new ArrayList<>(context.shipmentItems);
         List<Shipment> finalShipments = new ArrayList<>();
 
@@ -43,17 +44,15 @@ public class TimeProcess extends CostProcess {
 
         for(Shipment _shipment: finalShipments) {
             ShippingVehicle vehicle = utilities.findVehicle(context.vehicles);
-            TimeEstimator estimator = factory.getTimeEstimator(context.vehicleSpeed);
-
             for (ShipmentItem item : _shipment.items)
-                item.deliveryTime = estimator.calculateDeliveryTime(item);
+                item.deliveryTime = BigDecimal.valueOf(item.distance).divide(BigDecimal.valueOf(context.vehicleSpeed), 2, RoundingMode.FLOOR);
 
             for (ShipmentItem shipmentItem : _shipment.items) {
-                TimeItem item = (TimeItem) context.resultMap.get(shipmentItem.packageId);
-                item.arrivalTime = estimator.calculateArrivalItem(vehicle, shipmentItem);
+                ResultItem item = context.resultMap.get(shipmentItem.packageId);
+                item.arrivalTime = vehicle.availableAfter.add(shipmentItem.deliveryTime);
             }
 
-            BigDecimal time = estimator.calculateAvailableTime(vehicle, _shipment);
+            BigDecimal time = vehicle.availableAfter.add(_shipment.getDeliveryItem().multiply(BigDecimal.valueOf(2)));
 
             if (vehicle != null) {
                 vehicle.availableAfter = time;

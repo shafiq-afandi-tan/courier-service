@@ -1,9 +1,11 @@
 package com.everest.courier;
 
-import com.everest.courier.Exceptions.MyException;
+import com.everest.courier.Exceptions.EverestException;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Factory {
     public Process getProcess(ServiceType type) {
@@ -22,7 +24,7 @@ public class Factory {
         return new Parser();
     }
 
-    public Context getContext(ServiceType type, List<String> lines) throws MyException {
+    public Context getContext(ServiceType type, List<String> lines) throws EverestException {
         Parser parser = new Parser();
         if(type == ServiceType.COST)
             return parser.parseCostContext(lines);
@@ -31,19 +33,11 @@ public class Factory {
         return null;
     }
 
-    public ResultItem getResultItem(ServiceType type, String packageId, BigDecimal discount, BigDecimal totalCost) {
-        if(type == ServiceType.COST)
-            return new CostItem(packageId, discount, totalCost);
-        else if(type == ServiceType.TIME)
-            return new TimeItem(packageId, discount, totalCost, null);
-        return null;
+    public ResultItem getResultItem(String packageId, BigDecimal discount, BigDecimal totalCost) {
+        return new ResultItem(packageId, discount, totalCost);
     }
 
     public Utilities getUtilities() {
         return new Utilities();
-    }
-
-    public TimeEstimator getTimeEstimator(int vehicleSpeed) {
-        return new TimeEstimator(vehicleSpeed);
     }
 }

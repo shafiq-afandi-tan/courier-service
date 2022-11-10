@@ -22,4 +22,12 @@ public class Context {
     public int distanceFactor;
 
     public ServiceType type;
+
+    public int noOfVehicle;
+
+    public int vehicleSpeed;
+
+    public int vehicleCapacity;
+
+    public List<ShippingVehicle> vehicles = new ArrayList<>();
 }

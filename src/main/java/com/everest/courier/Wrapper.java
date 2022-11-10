@@ -5,10 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -56,9 +58,8 @@ public class Wrapper {
                 msg += " " + item.offerCode;
             System.out.println(msg);
         }
-        if(context instanceof TimeContext) {
-            TimeContext timeContext = (TimeContext)context;
-            System.out.println(timeContext.noOfVehicle + " " + timeContext.vehicleSpeed + " " + timeContext.vehicleCapacity);
+        if(context.type == ServiceType.TIME) {
+            System.out.println(context.noOfVehicle + " " + context.vehicleSpeed + " " + context.vehicleCapacity);
         }
     }
 
@@ -68,9 +69,8 @@ public class Wrapper {
         DecimalFormat format = new DecimalFormat("0.##");
         for(ResultItem item: context.resultItems) {
             String msg = item.packageId + " " + format.format(item.discount) + " " + format.format(item.totalCost);
-            if(item instanceof TimeItem) {
-                TimeItem timeItem = (TimeItem)item;
-                msg += " " + (timeItem.arrivalTime != null? format.format(timeItem.arrivalTime): "None");
+            if(context.type == ServiceType.TIME) {
+                msg += " " + (item.arrivalTime != null? format.format(item.arrivalTime): "None");
             }
             System.out.println(msg);
         }
@@ -83,9 +83,8 @@ public class Wrapper {
         DecimalFormat format = new DecimalFormat("0.##");
         for (ResultItem item :context.resultItems) {
             String msg = item.packageId + " " + format.format(item.discount) + " " + format.format(item.totalCost);
-            if(item instanceof TimeItem) {
-                TimeItem timeItem = (TimeItem)item;
-                msg += " " + (timeItem.arrivalTime != null? format.format(timeItem.arrivalTime): "");
+            if(context.type == ServiceType.TIME) {
+                msg += " " + (item.arrivalTime != null? format.format(item.arrivalTime): "");
             }
             msg += "\n";
             fw.write(msg);
@@ -94,7 +93,11 @@ public class Wrapper {
     }
 
     public String getConfiguration() throws IOException {
-        return Files.readString(Paths.get("Configuration.json"));
+        Path path = Paths.get("Configuration.json");
+        if(Files.exists(path))
+            return Files.readString(path);
+        else
+            throw new FileNotFoundException("Configuration.json is not found");
     }
 
     public void log(boolean debug, String msg) {
