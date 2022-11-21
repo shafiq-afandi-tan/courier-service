@@ -1,6 +1,8 @@
 package com.everest.courier;
 
-import com.everest.courier.Exceptions.EverestException;
+import com.everest.courier.Exceptions.ConfigurationException;
+import com.everest.courier.Exceptions.GeneralException;
+import org.json.simple.parser.ParseException;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -11,7 +13,7 @@ import static org.junit.Assert.*;
 
 public class TestParser {
     private void testParseCostContext_invalidInput(List<String> lines, String msg) {
-        EverestException e = assertThrows(EverestException.class, ()->{
+        GeneralException e = assertThrows(GeneralException.class, ()->{
             new Parser().parseCostContext(lines);
         });
         assertEquals(msg, e.getMessage());
@@ -114,7 +116,7 @@ public class TestParser {
     }
 
     private void testParseTimeContext_invalidInput(List<String> lines, String msg) {
-        EverestException e = assertThrows(EverestException.class, ()->{
+        GeneralException e = assertThrows(GeneralException.class, ()->{
             new Parser().parseTimeContext(lines);
         });
         assertEquals(msg, e.getMessage());
@@ -183,7 +185,7 @@ public class TestParser {
     }
 
     @Test
-    public void testParseTimeContext() throws EverestException {
+    public void testParseTimeContext() throws GeneralException {
         List<String> lines = new ArrayList<>();
         lines.add("100.00 1");
         lines.add("PKG1 100 50");
@@ -196,5 +198,58 @@ public class TestParser {
         assertEquals(70, item.speed);
         assertEquals(200, item.capacity);
         assertTrue(BigDecimal.valueOf(0).compareTo(item.availableAfter) == 0);
+    }
+
+    private void testBuildConfiguration_parseException(String strConfig) {
+        Context context = new Context();
+        ConfigurationException e = assertThrows(ConfigurationException.class, ()->{
+            new Parser().buildConfiguration(context, strConfig);
+        });
+        Throwable cause = e.getCause();
+        assertNotNull(cause);
+        assertTrue(cause instanceof ParseException);
+    }
+
+    private void testBuildConfiguration_formatException(String strConfig) {
+        Context context = new Context();
+        ConfigurationException e = assertThrows(ConfigurationException.class, ()->{
+            new Parser().buildConfiguration(context, strConfig);
+        });
+        Throwable cause = e.getCause();
+        assertNotNull(cause);
+        assertTrue(cause instanceof NumberFormatException);
+    }
+
+    public void testBuildConfiguration_configException(String strConfig) {
+        Context context = new Context();
+        ConfigurationException e = assertThrows(ConfigurationException.class, ()->{
+            new Parser().buildConfiguration(context, strConfig);
+        });
+        assertNotNull(e);
+    }
+
+    @Test
+    public void testBuildConfiguration_invalidOfferCode_negativeValue() {
+        //test against negative value
+        String strConfig = "{\n" +
+                "  \"weightFactor\": 10,\n" +
+                "  \"distanceFactor\": 5,\n" +
+                "  \"offerCodes\": [\n" +
+                "    {\"code\": \"OFR001\", \"weightLowerLimit\": -70, \"weightUpperLimit\":  200, \"distanceLowerLimit\":  null, \"distanceUpperLimit\":  200, \"discount\": 10},\n" +
+                "  ]\n" +
+                "}";
+        testBuildConfiguration_configException(strConfig);
+    }
+
+    @Test
+    public void testBuildConfiguration_invalidOfferCode_lowerHigher() {
+        String strConfig = "{\n" +
+                "  \"weightFactor\": 10,\n" +
+                "  \"distanceFactor\": 5,\n" +
+                "  \"offerCodes\": [\n" +
+                "    {\"code\": \"OFR001\", \"weightLowerLimit\": 200, \"weightUpperLimit\":  70, \"distanceLowerLimit\":  null, \"distanceUpperLimit\":  200, \"discount\": 10},\n" +
+                "  ]\n" +
+                "}";
+        testBuildConfiguration_configException(strConfig);
     }
 }

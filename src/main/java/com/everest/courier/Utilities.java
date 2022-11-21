@@ -6,42 +6,24 @@ import java.util.Collections;
 import java.util.List;
 
 public class Utilities {
-    List<Shipment> findShipmentsOf(ShipmentItem item, List<ShipmentItem> items, int weightLimit) {
-        List<Shipment> shipments = new ArrayList<>();
-        if(item.weight > weightLimit)
-            return shipments;
-        List<ShipmentItem> clones = new ArrayList<>(items);
-        do {
+    public Shipment findNextShipmentOf(List<ShipmentItem> items, int weightLimit) {
+        Shipment selected = null;
+        int counter = 0;
+        int weight = 0;
+        while(++counter < Math.pow(2, items.size())) {
             Shipment shipment = new Shipment();
-            shipment.items.add(item);
-            int weight = item.weight;
-            int size = clones.size(), count = 0;
-            for (ShipmentItem clone : clones) {
-                weight += clone.weight;
-                if (weight <= weightLimit) {
-                    shipment.items.add(clone);
-                    count++;
-                }
-                else {
-                    clones.remove(0);
-                    break;
+            for(int i = 0; i < items.size(); i++) {
+                int mask = 1 << i;
+                if((counter & mask) == mask) {
+                    ShipmentItem item = items.get(i);
+                    weight += item.weight;
+                    shipment.items.add(item);
                 }
             }
-            shipments.add(shipment);
-            if(count == size)
-                break;
-        } while(clones.size() > 0);
-        return shipments;
-    }
-
-    public Shipment findHeaviestShipment(List<Shipment> shipments) {
-        Shipment selected = null;
-        for(Shipment shipment: shipments) {
-            if(selected == null)
+            if(shipment.items.size() > 0 && shipment.getWeight() <= weightLimit
+                    && (selected == null || shipment.items.size() > selected.items.size() ||
+                    shipment.items.size() == selected.items.size() && shipment.getWeight() > selected.getWeight())) {
                 selected = shipment;
-            else {
-                if(shipment.getWeight() > selected.getWeight())
-                    selected = shipment;
             }
         }
         return selected;
@@ -67,11 +49,5 @@ public class Utilities {
                 selected = vehicle;
         }
         return selected;
-    }
-
-    public void sortShipments(List<Shipment> shipments) {
-        Collections.sort(shipments, (left, right)->{
-            return right.getWeight() - left.getWeight();
-        });
     }
 }

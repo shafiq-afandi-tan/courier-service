@@ -1,11 +1,11 @@
 package com.everest.courier.Exceptions;
 
-public class EverestException extends Exception {
-    public EverestException(String msg) {
+public class GeneralException extends Exception {
+    public GeneralException(String msg) {
         super(msg);
     }
 
-    public EverestException(String msg, Throwable cause) {
+    public GeneralException(String msg, Throwable cause) {
         super(msg, cause);
     }
 }

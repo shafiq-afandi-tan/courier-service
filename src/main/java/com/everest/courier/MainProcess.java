@@ -100,7 +100,7 @@ public class MainProcess implements Process {
                 wrapper.showCopyRight();
                 wrapper.showHelp();
             }
-            else if(e instanceof EverestException) {
+            else if(e instanceof GeneralException) {
                 wrapper.showError(e.getMessage());
                 wrapper.showHelp();
             }

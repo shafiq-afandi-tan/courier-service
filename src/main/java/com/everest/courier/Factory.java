@@ -1,11 +1,9 @@
 package com.everest.courier;
 
-import com.everest.courier.Exceptions.EverestException;
+import com.everest.courier.Exceptions.GeneralException;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Factory {
     public Process getProcess(ServiceType type) {
@@ -24,7 +22,7 @@ public class Factory {
         return new Parser();
     }
 
-    public Context getContext(ServiceType type, List<String> lines) throws EverestException {
+    public Context getContext(ServiceType type, List<String> lines) throws GeneralException {
         Parser parser = new Parser();
         if(type == ServiceType.COST)
             return parser.parseCostContext(lines);

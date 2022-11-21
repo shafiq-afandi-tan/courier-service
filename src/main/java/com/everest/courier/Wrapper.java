@@ -28,7 +28,7 @@ public class Wrapper {
     }
 
     public void showVersion() {
-        System.out.println("Version 1.0.0.");
+        System.out.println("Version 1.0.0");
     }
 
     public void showCopyRight() {

@@ -1,7 +1,7 @@
 package com.everest.courier;
 
 
-import com.everest.courier.Exceptions.EverestException;
+import com.everest.courier.Exceptions.GeneralException;
 import com.everest.courier.Exceptions.UserInputException;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
@@ -80,7 +80,7 @@ public class TestMainProcess {
     }
 
     @Test
-    public void testMain_inputFileEmpty() throws FileNotFoundException, EverestException {
+    public void testMain_inputFileEmpty() throws FileNotFoundException, GeneralException {
         Wrapper mockedWrapper = mock(Wrapper.class);
         Factory mockedFactory = mock(Factory.class);
         when(mockedFactory.getWrapper()).thenReturn(mockedWrapper);
@@ -93,7 +93,7 @@ public class TestMainProcess {
     }
 
     @Test
-    public void testMain_invalidInputLines() throws FileNotFoundException, EverestException {
+    public void testMain_invalidInputLines() throws FileNotFoundException, GeneralException {
         List<String> lines = new ArrayList<>();
         lines.add("junk");
         String msg = "Invalid format - field base_delivery_cost";
@@ -112,7 +112,7 @@ public class TestMainProcess {
     }
 
     @Test
-    public void testMain() throws IOException, EverestException, ParseException {
+    public void testMain() throws IOException, GeneralException, ParseException {
         List<String> iLines = new ArrayList<>();
         iLines.add("100 1");
         iLines.add("PKG1 50 30");

@@ -4,8 +4,6 @@ import com.everest.courier.Exceptions.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,32 +126,42 @@ public class Parser {
         return context;
     }
 
-    public void buildConfiguration(Context context, String value) throws ParseException {
-        JSONObject config = (JSONObject) new JSONParser().parse(value);
-        context.weightFactor = Integer.parseInt(config.get("weightFactor").toString());
-        context.distanceFactor = Integer.parseInt(config.get("distanceFactor").toString());
-        JSONArray arr = (JSONArray)config.get("offerCodes");
-        List<OfferCode> offerCodes = new ArrayList<>();
-        for(int i = 0; i < arr.size(); i++) {
-            JSONObject obj = (JSONObject)arr.get(i);
-            OfferCode offerCode = new OfferCode();
-            offerCode.code = (String)obj.get("code");
-            Object val = obj.get("weightLowerLimit");
-            if(val != null)
-                offerCode.weightLowerLimit = Integer.parseInt(val.toString());
-            val = obj.get("weightUpperLimit");
-            if(val != null)
-                offerCode.weightUpperLimit = Integer.parseInt(val.toString());
-            val = obj.get("distanceLowerLimit");
-            if(val != null)
-                offerCode.distanceLowerLimit = Integer.parseInt(val.toString());
-            val = obj.get("distanceUpperLimit");
-            if(val != null)
-                offerCode.distanceUpperLimit = Integer.parseInt(val.toString());
-            val = obj.get("discount");
-            if(val != null)
-                offerCode.discountPercent = Integer.parseInt(val.toString());
-            context.offerCodes.add(offerCode);
+    public void buildConfiguration(Context context, String value) throws ConfigurationException {
+        try {
+            JSONObject config = (JSONObject) new JSONParser().parse(value);
+            context.weightFactor = Integer.parseInt(config.get("weightFactor").toString());
+            context.distanceFactor = Integer.parseInt(config.get("distanceFactor").toString());
+            JSONArray arr = (JSONArray) config.get("offerCodes");
+            List<OfferCode> offerCodes = new ArrayList<>();
+            for (int i = 0; i < arr.size(); i++) {
+                JSONObject obj = (JSONObject) arr.get(i);
+                OfferCode offerCode = new OfferCode();
+                offerCode.code = (String) obj.get("code");
+                Object val = obj.get("weightLowerLimit");
+                if (val != null)
+                    offerCode.weightLowerLimit = Integer.parseInt(val.toString());
+                val = obj.get("weightUpperLimit");
+                if (val != null)
+                    offerCode.weightUpperLimit = Integer.parseInt(val.toString());
+                val = obj.get("distanceLowerLimit");
+                if (val != null)
+                    offerCode.distanceLowerLimit = Integer.parseInt(val.toString());
+                val = obj.get("distanceUpperLimit");
+                if (val != null)
+                    offerCode.distanceUpperLimit = Integer.parseInt(val.toString());
+                val = obj.get("discount");
+                if (val != null)
+                    offerCode.discountPercent = Integer.parseInt(val.toString());
+                if (offerCode.isValid() == false)
+                    throw new ConfigurationException(offerCode.error);
+                context.offerCodes.add(offerCode);
+            }
+        }
+        catch (ConfigurationException e) {
+            throw e;
+        }
+        catch(Throwable e) {
+            throw new ConfigurationException(e.getMessage(), e);
         }
     }
 }
